@@ -14,7 +14,7 @@ public class ChattenderFahrplanMcpApplication {
     }
 
     @Bean
-    public ToolCallbackProvider timetableTools(TimetableService timetableService) {
+    public ToolCallbackProvider timetableTools(TimetableTool timetableService) {
         return MethodToolCallbackProvider.builder().toolObjects(timetableService).build();
     }
 
