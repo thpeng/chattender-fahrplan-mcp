@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: chattender-fahrplan-mcp
+  ai:
+    mcp:
+      server:
+        name: chattender-fahrplan-mcp
+        version: 1.0.0
+        type: SYNC
+        stdio:
+          enabled: false
+        sse-message-endpoint: /mcp/message
