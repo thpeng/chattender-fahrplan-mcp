@@ -3,11 +3,10 @@ package ch.thp.cas.chattenderfahrplan.journeyservice;
 
 import java.util.UUID;
 
-import ch.thp.cas.chattenderfahrplan.FlatMapper;
-import ch.thp.cas.chattenderfahrplan.FlatPlan;
-import ch.thp.cas.chattenderfahrplan.PlanResult;
+import ch.thp.cas.chattenderfahrplan.mapping.FlatMapper;
+import ch.thp.cas.chattenderfahrplan.mapping.FlatPlan;
+import ch.thp.cas.chattenderfahrplan.mapping.PlanResult;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;

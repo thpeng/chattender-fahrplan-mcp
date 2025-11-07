@@ -1,7 +1,7 @@
 package ch.thp.cas.chattenderfahrplan.journeyservice;
 
 
-import ch.thp.cas.chattenderfahrplan.PlanResult;
+import ch.thp.cas.chattenderfahrplan.mapping.PlanResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;

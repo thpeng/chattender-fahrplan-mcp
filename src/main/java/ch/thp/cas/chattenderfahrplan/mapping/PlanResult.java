@@ -1,4 +1,4 @@
-package ch.thp.cas.chattenderfahrplan;
+package ch.thp.cas.chattenderfahrplan.mapping;
 
 
 import java.util.List;

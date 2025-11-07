@@ -3,10 +3,11 @@ package ch.thp.cas.chattenderfahrplan;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import ch.thp.cas.chattenderfahrplan.journeyservice.JourneyService;
 import ch.thp.cas.chattenderfahrplan.journeyservice.PlacesResolver;
+import ch.thp.cas.chattenderfahrplan.mapping.FlatPlan;
+import ch.thp.cas.chattenderfahrplan.mapping.FlatTrip;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.tool.annotation.Tool;
@@ -73,7 +74,8 @@ public class TimetableTool {
             name = "planJourneyText",
             description =
                     """
-                    Gibt genau **einen** deutschen Satz zur nächsten passenden Verbindung zurück (keine Liste, keine Zusatztexte).
+                    Eingabe: zwei Ortsnamen (z.B. "Zürich HB", "Bern") oder UICs die der benutzer als from oder to bezeichnet. 
+                    Ausgabe: Gibt genau **einen** deutschen Satz zur nächsten passenden Verbindung zurück (keine Liste, keine Zusatztexte).
                     Format (Beispiel):
                     "Der nächste S 4 von BLS AG (bls) fährt in Richtung Bern um 09:20 ab Zürich HB auf Gleis 15 und erreicht Bern um 09:58 an Gleis 7."
                     
