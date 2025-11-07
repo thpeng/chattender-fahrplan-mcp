@@ -2,6 +2,9 @@ package ch.thp.cas.chattenderfahrplan.journeyservice;
 
 
 import java.util.UUID;
+
+import ch.thp.cas.chattenderfahrplan.PlanResult;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -17,7 +20,8 @@ public class JourneyService {
         this.client = journeyWebClient;
     }
 
-    public Mono<String> plan(String origin, String destination) {
+    public Mono<PlanResult> plan(String originUIC, String destinationUIC, int maxOptions) {
+        var req = new TripsRequest(originUIC, destinationUIC, null, null, false);
         var reqId = UUID.randomUUID().toString();
 
         return client.post()
@@ -25,17 +29,12 @@ public class JourneyService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Accept-Language", "de")
                 .header("Request-ID", reqId)
-                .bodyValue(TripsRequest.of(origin, destination))
+                .bodyValue(req)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, rsp ->
-                        rsp.bodyToMono(String.class).defaultIfEmpty("")
-                                .flatMap(msg -> Mono.error(new IllegalStateException(
-                                        "Journey error " + rsp.statusCode() + " " + msg))))
-                .bodyToMono(String.class);
+                .bodyToMono(JsonNode.class)
+                .map(json -> JourneyMapper.toPlanResult(json, Math.max(1, maxOptions)));
     }
 
-    record TripsRequest(String origin, String destination, String date, String time, Boolean forArrival) {
-        static TripsRequest of(String o, String d) { return new TripsRequest(o, d, null, null, false); }
-    }
+    record TripsRequest(String origin, String destination, String date, String time, Boolean forArrival) {}
 }
 
