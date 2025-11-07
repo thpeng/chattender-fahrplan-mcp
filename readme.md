@@ -32,12 +32,12 @@ The project demonstrates how LLMs can interact with real-time data services usin
 
 ## Integration with LLMs
 
-The MCP server has been validated with:
-- **OpenAI OSS GPT (20B)** – full JSON parsing supported
-- **LM Studio Apertus 8B** – limited parsing ability; works best with the `planJourneyText` tool and the included **minimal Jinja template**
+The MCP server has been tested with:
+- **OpenAI OSS GPT (20B)** – full JSON parsing supported. Seldom issues detected, mostly caused by too many information in the chat window. 
+- **Apertus 8B** – limited parsing ability; works sometimes with the `planJourneyText` tool and the included **minimal Jinja template**
 
 The **Jinja template** must be used for proper tool invocation inside LM Studio.  
-It enables Apertus to correctly render tool calls and responses.
+It enables Apertus sometimes to render tool calls and responses.
 
 ---
 
