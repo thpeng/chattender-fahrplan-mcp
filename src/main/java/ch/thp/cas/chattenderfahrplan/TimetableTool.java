@@ -1,6 +1,8 @@
 package ch.thp.cas.chattenderfahrplan;
 
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import ch.thp.cas.chattenderfahrplan.journeyservice.JourneyService;
@@ -24,19 +26,117 @@ public class TimetableTool {
         this.placesResolver = placesResolver;
     }
 
-    @Tool(
-            name = "planJourney",
-            description = "Plan a journey between two place names (e.g. 'Zurich HB', 'Bern'). Returns a compact list for LLMs."
-    )
-    public Mono<PlanResult> planJourney(
-            @ToolParam(description = "Origin name or UIC") String from,
-            @ToolParam(description = "Destination name or UIC") String to) {
 
-        var origin = isUIC(from) ? Mono.just(from) : placesResolver.resolveStopPlaceId(from, "de");
-        var dest   = isUIC(to)   ? Mono.just(to)   : placesResolver.resolveStopPlaceId(to, "de");
-        return Mono.zip(origin, dest)
-                .flatMap(t -> journeys.plan(t.getT1(), t.getT2(), 5)); // z.B. Top 5 Optionen
+    // ---------------------------
+    // TOOL 1: Kompaktes JSON
+    // ---------------------------
+    @Tool(
+            name = "planJourneyJson",
+            description =
+                    """
+                    Liefert eine kompakte Liste von Verbindungen als JSON.
+                    - Eingabe: zwei Ortsnamen (z.B. "Zürich HB", "Bern") oder UICs.
+                    - Ausgabe: { "options": [ { "dep","arr","service","operator","fromQuay","toQuay","dir" } ] }
+                    - "service" = fahrgastnahe Bezeichnung (z.B. "S 4"), nicht Zugnummer.
+                    - Rückgabe ist **reines JSON** (kein Text).
+                    
+                    Beispiele (korrekt):
+                    {"from":"burgistein","to":"kaufdorf"}
+                    {"from":"Zürich HB","to":"Bern"}
+                    """
+    )
+    public FlatPlan planJourneyJson(
+            @ToolParam(
+                    description =
+                            """
+                            Start-Ort (Bevorzugt: Name, alternativ UIC).
+                            Beispiele: "Zürich HB", "Bern", "8503000".
+                            """
+            ) String from,
+            @ToolParam(
+                    description =
+                            """
+                            Ziel-Ort (Bevorzugt: Name, alternativ UIC).
+                            Beispiele: "Bern", "Kaufdorf", "8507000".
+                            """
+            ) String to) {
+
+        Mono<String> o = isUIC(from) ? Mono.just(from) : placesResolver.resolveStopPlaceId(from, "de");
+        Mono<String> d = isUIC(to)   ? Mono.just(to)   : placesResolver.resolveStopPlaceId(to, "de");
+        return Mono.zip(o, d).flatMap(t -> journeys.planFlat(t.getT1(), t.getT2(), 5)).block();
     }
 
+    // ---------------------------
+    // TOOL 2: Prosa (eine Zeile)
+    // ---------------------------
+    @Tool(
+            name = "planJourneyText",
+            description =
+                    """
+                    Gibt genau **einen** deutschen Satz zur nächsten passenden Verbindung zurück (keine Liste, keine Zusatztexte).
+                    Format (Beispiel):
+                    "Der nächste S 4 von BLS AG (bls) fährt in Richtung Bern um 09:20 ab Zürich HB auf Gleis 15 und erreicht Bern um 09:58 an Gleis 7."
+                    
+                    Regeln:
+                    - Verwende Nutzer-Ortsnamen, falls übergeben (sonst neutral: "Abfahrt"/"Ankunft").
+                    - Zeiten als HH:mm.
+                    - Wenn kein Treffer: "Keine passende Verbindung gefunden."
+                    """
+    )
+    public String planJourneyText(
+            @ToolParam(
+                    description =
+                            """
+                            Start-Ort (Bevorzugt: Name, alternativ UIC).
+                            Beispiele: "Burgistein", "Zürich HB", "8503000".
+                            """
+            ) String from,
+            @ToolParam(
+                    description =
+                            """
+                            Ziel-Ort (Bevorzugt: Name, alternativ UIC).
+                            Beispiele: "Kaufdorf", "Bern", "8507000".
+                            """
+            ) String to) {
+
+        Mono<String> o = isUIC(from) ? Mono.just(from) : placesResolver.resolveStopPlaceId(from, "de");
+        Mono<String> d = isUIC(to)   ? Mono.just(to)   : placesResolver.resolveStopPlaceId(to, "de");
+
+        return Mono.zip(o, d)
+                .flatMap(t -> journeys.planFlat(t.getT1(), t.getT2(), 1))
+                .map(fp -> {
+                    if (fp.options().isEmpty()) return "Keine passende Verbindung gefunden.";
+                    FlatTrip x = fp.options().get(0);
+
+                    String dep = hhmm(x.dep());
+                    String arr = hhmm(x.arr());
+                    String svc = nz(x.service(), "Zug");
+                    String op  = nz(x.operator(), "");
+                    String fq  = nz(x.fromQuay(), "-");
+                    String tq  = nz(x.toQuay(), "-");
+                    String dir = nz(x.dir(), "-");
+
+                    String fromLabel = isUIC(from) ? "Abfahrt" : from;
+                    String toLabel   = isUIC(to)   ? "Ankunft" : to;
+
+                    String opPart = op.isBlank() ? "" : " von " + op;
+                    String tqPart = tq.equals("-") ? "" : " an Gleis " + tq;
+
+                    return String.format(
+                            "Der nächste %s%s fährt in Richtung %s um %s ab %s auf Gleis %s und erreicht %s um %s%s.",
+                            svc, opPart, dir, dep, fromLabel, fq, toLabel, arr, tqPart
+                    );
+                }).block();
+    }
+
+    // ---------------------------
+    // Helper
+    // ---------------------------
     private boolean isUIC(String s) { return s != null && s.matches("\\d{6,8}"); }
+
+    private static String hhmm(String iso) {
+        try { return DateTimeFormatter.ofPattern("HH:mm").format(OffsetDateTime.parse(iso)); }
+        catch (Exception e) { return iso != null ? iso : "-"; }
+    }
+    private static String nz(String s, String dflt){ return (s==null || s.isBlank()) ? dflt : s; }
 }

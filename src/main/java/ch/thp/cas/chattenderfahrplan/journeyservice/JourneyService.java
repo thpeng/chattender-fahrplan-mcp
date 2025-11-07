@@ -3,6 +3,8 @@ package ch.thp.cas.chattenderfahrplan.journeyservice;
 
 import java.util.UUID;
 
+import ch.thp.cas.chattenderfahrplan.FlatMapper;
+import ch.thp.cas.chattenderfahrplan.FlatPlan;
 import ch.thp.cas.chattenderfahrplan.PlanResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatusCode;
@@ -34,6 +36,21 @@ public class JourneyService {
                 .bodyToMono(JsonNode.class)
                 .map(json -> JourneyMapper.toPlanResult(json, Math.max(1, maxOptions)));
     }
+
+    // JourneyService.java (Ausschnitt)
+    public Mono<FlatPlan> planFlat(String originUIC, String destinationUIC, int maxOptions) {
+        return client.post()
+                .uri("/v3/trips/by-origin-destination")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Accept-Language", "de")
+                .header("Request-ID", UUID.randomUUID().toString())
+                .bodyValue(new TripsRequest(originUIC, destinationUIC, null, null, false))
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(json -> JourneyMapper.toPlanResult(json, Math.max(1, maxOptions)))
+                .map(FlatMapper::toFlat);
+    }
+
 
     record TripsRequest(String origin, String destination, String date, String time, Boolean forArrival) {}
 }
