@@ -6,7 +6,6 @@ substitutions:
   _SERVICE: "chattender-fahrplan-mcp"
   _REPO: "apps"
   _IMAGE_NAME: "chattender-fahrplan-mcp"
-  # Removed _IMAGE_TAG from here, as it contains a dynamic variable
   _JOURNEY_SERVICE_BASE: "https://journey-service-int.api.sbb.ch"
 
 steps:
@@ -14,22 +13,13 @@ steps:
   - name: gcr.io/k8s-skaffold/pack
     args:
       - build
-      # The pack build command will correctly resolve these variables at runtime
       - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:commit-$SHORT_SHA"
       - "--path=."
       - "--builder=gcr.io/buildpacks/builder:v1"
     env:
-      - GOOGLE_RUNTIME_VERSION=java21
-
-  # This step is actually redundant if the pack build step successfully pushes the image.
-  # Buildpacks usually push directly to the specified registry.
-  # However, if you want to explicitly push, ensure the tag is correct.
-  # For most buildpack workflows, you can remove this step.
-  # If you keep it, ensure the image name matches what pack build produced.
-  # - name: gcr.io/cloud-builders/docker
-  #   args:
-  #     - push
-  #     - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:commit-$SHORT_SHA"
+      # --- IMPORTANT CHANGE HERE ---
+      # Specify the Java runtime version to use for the buildpack
+      - GOOGLE_RUNTIME_VERSION=21
 
   # Deploy auf Cloud Run
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
@@ -51,6 +41,4 @@ steps:
           --set-secrets "MCP_API_KEY=projects/${PROJECT_ID}/secrets/MCP_API_KEY:latest"
 
 images:
-  # This field should only contain the base image name without unresolved dynamic tags.
-  # Cloud Build uses this to know which image repository to grant push permissions to.
   - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}"
