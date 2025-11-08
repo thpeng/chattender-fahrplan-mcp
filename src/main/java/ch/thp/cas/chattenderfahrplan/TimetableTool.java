@@ -14,6 +14,11 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import reactor.core.publisher.Mono;
 
+/**
+ * class to handle llm tool call. the prompts here influence the behavior of the llm.
+ * effect of the prompts differ per llm.
+ * intended as reactive, fell back to blocking behavior because the mcp clients couldn't handle reactive streams.
+ */
 @Service
 @Slf4j
 public class TimetableTool {
