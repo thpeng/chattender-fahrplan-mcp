@@ -1,0 +1,48 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: "europe-west6"
+  _SERVICE: "chattender-fahrplan-mcp"
+  _REPO: "apps"
+  _IMAGE_NAME: "chattender-fahrplan-mcp"
+  _IMAGE_TAG: "commit-$SHORT_SHA"
+  _JOURNEY_SERVICE_BASE: "https://journey-service-int.api.sbb.ch"
+
+steps:
+  # Build Image mit Paketo Buildpacks (kein Dockerfile nötig)
+  - name: gcr.io/k8s-skaffold/pack
+    args:
+      - build
+      - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}"
+      - "--path=."
+      - "--builder=gcr.io/buildpacks/builder:v1"
+    env:
+      - GOOGLE_RUNTIME_VERSION=java21
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}"
+
+  # Deploy auf Cloud Run
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud run deploy ${_SERVICE} \
+          --image europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG} \
+          --region ${_REGION} \
+          --allow-unauthenticated \
+          --service-account=run-deployer@${PROJECT_ID}.iam.gserviceaccount.com \
+          --concurrency=80 \
+          --cpu=1 --memory=512Mi \
+          --min-instances=0 --max-instances=10 \
+          --set-env-vars "SPRING_PROFILES_ACTIVE=prod,JOURNEY_SERVICE_BASE=${_JOURNEY_SERVICE_BASE}" \
+          --set-secrets "JOURNEY_SERVICE_CLIENT_ID=projects/${PROJECT_ID}/secrets/JOURNEY_SERVICE_CLIENT_ID:latest" \
+          --set-secrets "JOURNEY_SERVICE_CLIENT_SECRET=projects/${PROJECT_ID}/secrets/JOURNEY_SERVICE_CLIENT_SECRET:latest" \
+          --set-secrets "MCP_API_KEY=projects/${PROJECT_ID}/secrets/MCP_API_KEY:latest"
+
+images:
+  - europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:${_IMAGE_TAG}
