@@ -5,6 +5,8 @@ Tested with **OpenAI OSS GPT (20B)**,  **LM Studio (Apertus 8B)** and Qwen-3 8b 
 Should enable bring-you-own LLM to interact with the SBB timetable.
 This is an experimental study project with no warranties regarding accuracy, completeness or runtime behavior. 
 
+In memory of the 1996 Sprechender Fahrplan
+
 ---
 
 ## Overview
