@@ -20,7 +20,6 @@ public final class JourneyMapper {
     public static PlanResult toPlanResult(JsonNode root, int limit) {
         List<PlanResult.TripOption> out = new ArrayList<>();
         if (root == null) return PlanResult.of(out);
-        log.info(root.toPrettyString());
 
         for (JsonNode trip : root.path("trips")) {
             JsonNode leg = findFirstRideLeg(trip.path("legs"));
