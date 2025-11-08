@@ -1,7 +1,7 @@
 # 🚆 Der chattende Fahrplan - a Swiss Timetable MCP Server
 
 A **Spring AI / MCP-compatible server** that provides **SBB timetable information** to language models.  
-Tested with **OpenAI OSS GPT (20B)** and **LM Studio (Apertus 8B)**.
+Tested with **OpenAI OSS GPT (20B)**,  **LM Studio (Apertus 8B)** and Qwen-3 8b via LM Studio.
 Should enable bring-you-own LLM to interact with the SBB timetable.
 This is an experimental study project with no warranties regarding accuracy, completeness or runtime behavior. 
 
@@ -20,7 +20,7 @@ The project demonstrates how LLMs can interact with real-time data services usin
 
 ## Components in the Repository
 
-- **nfrastructure** – Infra- and security-components
+- **infrastructure** – Infra- and security-components
 - **journeyservice** – stuff to interact with the sbb journey-service
 - **mapping** – from j-s data to llm-digestible datatypes
 - **Two MCP Tools** – both accessible via `/mcp/tools` endpoints and registered automatically
@@ -35,9 +35,7 @@ The project demonstrates how LLMs can interact with real-time data services usin
 The MCP server has been tested with:
 - **OpenAI OSS GPT (20B)** – full JSON parsing supported. Seldom issues detected, mostly caused by too much information in the chat window. 
 - **Apertus 8B** – limited parsing ability; works sometimes with the `planJourneyText` tool and the included **minimal Jinja template**
-
-The **Jinja template** must be used for proper tool invocation inside LM Studio.  
-It enables Apertus sometimes to render tool calls and responses.
+- **Qwen-3 8B** - very good results. Use this if possible with Lm Studio. 
 
 ---
 
@@ -47,7 +45,7 @@ It enables Apertus sometimes to render tool calls and responses.
 - **Apertus models** may fail to parse or render complex JSON correctly  
   → use `planJourneyText` for reliable output
 - **OpenAI OSS GPT (20B)** handles both JSON and text modes well
-- **journe-service integration** is not correctly implemented. via, legs and direction information are sometimes wrong
+- **journey-service integration** misses several (edge) cases. For example it does handle via correctly.
 
 ---
 
