@@ -35,13 +35,14 @@ public class TimetableTool {
             name = "planJourneyJson",
             description =
                     """
-                    Liefert eine kompakte Liste von Verbindungen als JSON.
-                    - Eingabe: zwei Ortsnamen (z.B. "Zürich HB", "Bern") oder UICs.
+                    Liefert eine kompakte Liste von Verbindungen als JSON zurück. Erstelle eine Tabelle aus dem json mit spalten 
+                    Bezeichnung (service) Abfahrtszeit (dep), Abfahrtsgleis (fromQuay), Anbieter (operator), Ankunftszeit (arr), Ankunftsgleis (toquay) und Ziel des Zuges (dir). .
+                    - Eingabe: zwei Ortsnamen (z.B. "Zürich HB", "Bern") oder UICs. 
                     - Ausgabe: { "options": [ { "dep","arr","service","operator","fromQuay","toQuay","dir" } ] }
                     - "service" = fahrgastnahe Bezeichnung (z.B. "S 4"), nicht Zugnummer.
                     - Rückgabe ist **reines JSON** (kein Text).
                     
-                    Beispiele (korrekt):
+                    Beispiele  wie du die Eingabe mappen sollst:
                     {"from":"burgistein","to":"kaufdorf"}
                     {"from":"Zürich HB","to":"Bern"}
                     """
@@ -75,12 +76,9 @@ public class TimetableTool {
             description =
                     """
                     Eingabe: zwei Ortsnamen (z.B. "Zürich HB", "Bern") oder UICs die der benutzer als from oder to bezeichnet. 
-                    Ausgabe: Gibt genau **einen** deutschen Satz zur nächsten passenden Verbindung zurück (keine Liste, keine Zusatztexte).
-                    Format (Beispiel):
-                    "Der nächste S 4 von BLS AG (bls) fährt in Richtung Bern um 09:20 ab Zürich HB auf Gleis 15 und erreicht Bern um 09:58 an Gleis 7."
-                    
+                    Ausgabe: Gibt genau **einen** Satz zur nächsten passenden Verbindung zurück (keine Liste, keine Zusatztexte).
+                    Übersetze die Rückgabe des Tools unbedingt in die Sprache wie der Benutzer mit dir interagiert!
                     Regeln:
-                    - Verwende Nutzer-Ortsnamen, falls übergeben (sonst neutral: "Abfahrt"/"Ankunft").
                     - Zeiten als HH:mm.
                     - Wenn kein Treffer: "Keine passende Verbindung gefunden."
                     """
