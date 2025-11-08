@@ -7,16 +7,21 @@ substitutions:
   _REPO: "apps"
   _IMAGE_NAME: "chattender-fahrplan-mcp"
   _JOURNEY_SERVICE_BASE: "https://journey-service-int.api.sbb.ch"
-  _PROJECT_NUMBER: "971368006395" # <--- ADD THIS SUBSTITUTION
+  _PROJECT_NUMBER: "971368006395" # Replace with your actual project number
 
 steps:
   # Build Image mit Paketo Buildpacks (kein Dockerfile nötig)
   - name: gcr.io/k8s-skaffold/pack
+    # The entrypoint is usually 'pack' by default, but good to be explicit
+    entrypoint: pack
     args:
       - build
       - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:commit-$SHORT_SHA"
       - "--path=."
       - "--builder=gcr.io/buildpacks/builder:google-22"
+      # --- ADD THESE ARGS FOR AUTHENTICATION AND PUSHING ---
+      - "--publish" # This tells 'pack' to push the image to the specified registry
+      - "--pull-policy=if-not-present" # Optional: pulls builder if not present
     env:
       - GOOGLE_RUNTIME_VERSION=21
 
