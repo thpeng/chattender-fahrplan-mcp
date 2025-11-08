@@ -15,7 +15,7 @@ steps:
       - build
       - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:commit-$SHORT_SHA"
       - "--path=."
-      - "--builder=gcr.io/buildpacks/gcp/buildpacks:latest" # <-- CRITICAL CHANGE HERE
+      - "--builder=gcr.io/buildpacks/builder:google-22" # <-- Use the google-22 builder explicitly
     env:
       - GOOGLE_RUNTIME_VERSION=21
 
