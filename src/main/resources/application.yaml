@@ -25,3 +25,11 @@ spring:
         stdio:
           enabled: false
         sse-message-endpoint: /mcp/message
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+         - health
+         - readiness
+         - liveness
