@@ -15,10 +15,8 @@ steps:
       - build
       - "europe-west6-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE_NAME}:commit-$SHORT_SHA"
       - "--path=."
-      - "--builder=gcr.io/buildpacks/builder:v1"
+      - "--builder=gcr.io/buildpacks/gcp/buildpacks:latest" # <-- CRITICAL CHANGE HERE
     env:
-      # --- IMPORTANT CHANGE HERE ---
-      # Specify the Java runtime version to use for the buildpack
       - GOOGLE_RUNTIME_VERSION=21
 
   # Deploy auf Cloud Run
