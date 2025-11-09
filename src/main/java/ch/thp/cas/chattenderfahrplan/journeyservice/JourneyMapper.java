@@ -12,81 +12,136 @@ public final class JourneyMapper {
 
     private JourneyMapper() {}
 
-    /**
-     * Mappt die Journey-API-Response auf ein flaches, LLM-freundliches Ergebnis.
-     * Wichtiger Fix: StopPoints für Abfahrt/Ankunft via routeIndex matchen
-     * und NICHT als Arrayindex interpretieren.
-     */
-    public static PlanResult toPlanResult(JsonNode root, int limit) {
-        List<PlanResult.TripOption> out = new ArrayList<>();
-        if (root == null) return PlanResult.of(out);
-
+    public static PlanResult toPlanResultItinerary(JsonNode root) {
+        if (root == null) return PlanResult.of(List.of());
         for (JsonNode trip : root.path("trips")) {
-            JsonNode leg = findFirstRideLeg(trip.path("legs"));
-            if (leg == null) continue;
+            List<PlanResult.TripOption> legs = new ArrayList<>();
+            JsonNode arr = trip.path("legs");
+            if (!arr.isArray()) continue;
+            for (JsonNode leg : arr) {
+                if (!"PTRideLeg".equalsIgnoreCase(leg.path("type").asText())) continue;
+                JsonNode sj = leg.path("serviceJourney");
+                JsonNode stopPoints = sj.path("stopPoints");
+                JsonNode prod = (sj.path("serviceProducts").isArray() && sj.path("serviceProducts").size()>0)
+                        ? sj.path("serviceProducts").get(0) : null;
+                StopPair pair = resolveDepArrStopPoints(stopPoints, prod);
+                if (pair.depSp == null || pair.arrSp == null) continue;
 
-            JsonNode sj = leg.path("serviceJourney");
-            JsonNode stopPoints = sj.path("stopPoints");
+                String dep = pickTime(pair.depSp.path("departure"));
+                String arrT = pickTime(pair.arrSp.path("arrival"));
+                String fq = pickQuay(pair.depSp.path("departure"));
+                String tq = pickQuay(pair.arrSp.path("arrival"));
+                String fromName = textOrNull(pair.depSp.path("place").path("name"));
+                String toName   = textOrNull(pair.arrSp.path("place").path("name"));
 
-            // Produkt immer aus serviceJourney lesen
-            JsonNode product = (sj.path("serviceProducts").isArray() && sj.path("serviceProducts").size() > 0)
-                    ? sj.path("serviceProducts").get(0) : null;
-
-            // Dep/Arr StopPoint korrekt bestimmen
-            StopPair pair = resolveDepArrStopPoints(stopPoints, product);
-            if (pair.depSp == null || pair.arrSp == null) continue;
-
-            // Zeiten: Echtzeit vor Aimed
-            String depTime = pickTime(pair.depSp.path("departure"));
-            String arrTime = pickTime(pair.arrSp.path("arrival"));
-
-            // Gleise: Rt → Formatted → Aimed
-            String fromQuay = pickQuay(pair.depSp.path("departure"));
-            String toQuay   = pickQuay(pair.arrSp.path("arrival"));
-
-            // Service-Label
-            String serviceLabel = null;
-            if (product != null) {
-                serviceLabel = textOrNull(product.path("nameFormatted"));
-                if (serviceLabel == null) {
-                    String name = textOrNull(product.path("name"));
-                    if (name != null) {
-                        String[] tokens = name.split("\\s+");
-                        serviceLabel = (tokens.length >= 2) ? (tokens[0] + " " + tokens[1]).trim() : name.trim();
+                String service = null;
+                if (prod != null) {
+                    service = textOrNull(prod.path("nameFormatted"));
+                    if (service == null) {
+                        String name = textOrNull(prod.path("name"));
+                        if (name != null) {
+                            var t = name.split("\\s+");
+                            service = (t.length>=2) ? (t[0] + " " + t[1]).trim() : name.trim();
+                        }
+                    }
+                    if (service == null) {
+                        String sub = textOrNull(prod.path("vehicleMode").path("vehicleSubModeShortName"));
+                        String line = textOrNull(prod.path("line"));
+                        if (sub != null && line != null) service = (sub + " " + line).trim();
                     }
                 }
-                if (serviceLabel == null) {
-                    String sub = textOrNull(product.path("vehicleMode").path("vehicleSubModeShortName"));
-                    String line = textOrNull(product.path("line"));
-                    if (sub != null && line != null) serviceLabel = (sub + " " + line).trim();
+                String operator = prod != null ? textOrNull(prod.path("operator").path("name")) : null;
+
+                String direction = null;
+                if (sj.path("directions").isArray() && sj.path("directions").size()>0)
+                    direction = textOrNull(sj.path("directions").get(0).path("name"));
+                else if (leg.path("directions").isArray() && leg.path("directions").size()>0)
+                    direction = textOrNull(leg.path("directions").get(0).path("name"));
+
+                legs.add(new PlanResult.TripOption(
+                        dep, arrT, service, operator, fq, tq, direction, fromName, toName
+                ));
+            }
+            if (!legs.isEmpty()) return PlanResult.of(legs); // nur erste Verbindung
+        }
+        return PlanResult.of(List.of());
+    }
+
+    // 2) Options: MEHRERE Verbindungen als kompakte Übersicht (je Trip genau 1 Option)
+    public static PlanResult toPlanResultOptions(JsonNode root, int maxOptions) {
+        if (root == null) return PlanResult.of(List.of());
+        List<PlanResult.TripOption> options = new ArrayList<>();
+
+        for (JsonNode trip : root.path("trips")) {
+            JsonNode legs = trip.path("legs");
+            if (!legs.isArray() || legs.size()==0) continue;
+
+            // erstes und letztes PTRideLeg finden
+            JsonNode firstRide = null, lastRide = null;
+            for (JsonNode leg : legs) {
+                if ("PTRideLeg".equalsIgnoreCase(leg.path("type").asText())) {
+                    if (firstRide == null) firstRide = leg;
+                    lastRide = leg;
                 }
             }
+            if (firstRide == null || lastRide == null) continue;
 
-            // Operator
-            String operator = product != null ? textOrNull(product.path("operator").path("name")) : null;
+            // aus first/last die Eckdaten
+            JsonNode sjFirst = firstRide.path("serviceJourney");
+            JsonNode sjLast  = lastRide.path("serviceJourney");
+            JsonNode prodFirst = (sjFirst.path("serviceProducts").isArray() && sjFirst.path("serviceProducts").size()>0)
+                    ? sjFirst.path("serviceProducts").get(0) : null;
 
-            // Richtung
-            String direction = null;
-            if (sj.path("directions").isArray() && sj.path("directions").size() > 0) {
-                direction = textOrNull(sj.path("directions").get(0).path("name"));
-            } else if (leg.path("directions").isArray() && leg.path("directions").size() > 0) {
-                direction = textOrNull(leg.path("directions").get(0).path("name"));
+            StopPair depPair = resolveDepArrStopPoints(sjFirst.path("stopPoints"), prodFirst);
+            StopPair arrPair = resolveDepArrStopPoints(sjLast.path("stopPoints"),
+                    (sjLast.path("serviceProducts").isArray() && sjLast.path("serviceProducts").size()>0)
+                            ? sjLast.path("serviceProducts").get(0) : null);
+
+            if (depPair.depSp == null || arrPair.arrSp == null) continue;
+
+            String dep = pickTime(depPair.depSp.path("departure"));
+            String arrT = pickTime(arrPair.arrSp.path("arrival"));
+            String fq = pickQuay(depPair.depSp.path("departure"));
+            String tq = pickQuay(arrPair.arrSp.path("arrival"));
+
+            String fromName = textOrNull(depPair.depSp.path("place").path("name"));
+            String toName   = textOrNull(arrPair.arrSp.path("place").path("name"));
+
+            // Service / Operator / Richtung von ERSTEM Fahr-Leg
+            String service = null;
+            if (prodFirst != null) {
+                service = textOrNull(prodFirst.path("nameFormatted"));
+                if (service == null) {
+                    String name = textOrNull(prodFirst.path("name"));
+                    if (name != null) {
+                        var t = name.split("\\s+");
+                        service = (t.length>=2) ? (t[0] + " " + t[1]).trim() : name.trim();
+                    }
+                }
+                if (service == null) {
+                    String sub = textOrNull(prodFirst.path("vehicleMode").path("vehicleSubModeShortName"));
+                    String line = textOrNull(prodFirst.path("line"));
+                    if (sub != null && line != null) service = (sub + " " + line).trim();
+                }
             }
+            String operator = prodFirst != null ? textOrNull(prodFirst.path("operator").path("name")) : null;
 
-            out.add(new PlanResult.TripOption(
-                    depTime,
-                    arrTime,
-                    serviceLabel,
-                    operator,
-                    fromQuay,
-                    toQuay,
-                    direction
+            String direction = null;
+            if (sjFirst.path("directions").isArray() && sjFirst.path("directions").size()>0)
+                direction = textOrNull(sjFirst.path("directions").get(0).path("name"));
+            else if (firstRide.path("directions").isArray() && firstRide.path("directions").size()>0)
+                direction = textOrNull(firstRide.path("directions").get(0).path("name"));
+
+            options.add(new PlanResult.TripOption(
+                    dep, arrT, service, operator, fq, tq, direction, fromName, toName
             ));
 
-            if (out.size() >= limit) break;
+            if (maxOptions > 0 && options.size() >= maxOptions) break;
         }
-        return PlanResult.of(out);
+        return PlanResult.of(options);
     }
+
+
 
     // ---------- Helpers ----------
 

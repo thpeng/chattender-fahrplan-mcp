@@ -1,7 +1,5 @@
 package ch.thp.cas.chattenderfahrplan.mapping;
 
-
-
 import java.util.List;
 
 public final class FlatMapper {
@@ -14,7 +12,8 @@ public final class FlatMapper {
                         nz(o.departureTime()), nz(o.arrivalTime()),
                         nz(o.serviceLabel()),  nz(o.operator()),
                         nz(o.fromQuay()),      nz(o.toQuay()),
-                        nz(o.direction())
+                        nz(o.direction()),
+                        nz(o.fromName()),      nz(o.toName())
                 )
         ).toList();
         return new FlatPlan(list);

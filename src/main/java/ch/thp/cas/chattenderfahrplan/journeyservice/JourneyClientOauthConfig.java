@@ -7,6 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
+import org.springframework.util.unit.DataSize;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 
@@ -36,9 +38,14 @@ class JourneyClientOAuthConfig {
 
         var oauth = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth.setDefaultClientRegistrationId("journey");
-
+        // journey-service returns sometimes large payloads
+        final int size = (int) DataSize.ofMegabytes(5).toBytes();
+        final ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size))
+                .build();
         return WebClient.builder()
                 .baseUrl(baseUrl)
+                .exchangeStrategies(strategies)
                 .filter(oauth)                              // fügt automatisch Bearer-Token ein
                 .defaultHeaders(h -> h.setAccept(List.of(MediaType.APPLICATION_JSON)))
                 .build();
