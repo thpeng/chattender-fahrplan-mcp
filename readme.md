@@ -36,12 +36,21 @@ It also serves as a **testbed** to explore whether it is feasible to build a Swi
 
 ## Integration with LLMs
 
-The MCP server has been tested with:
+The MCP server can be connected to various LLM runtimes and frontends.  
+Below is an overview of tested or planned integrations:
 
-- **OpenAI OSS GPT (20B)** – full JSON parsing supported; rare issues caused by excessive chat context
-- **Apertus 8B** – limited parsing ability; works intermittently with `planJourneyText` and the included minimal Jinja template
-- **Qwen-3 8B** – very good results; recommended when using LM Studio
-- **Mistral Large 123B** – tested via *Le Chat*; very good results, including voice mode
+| Interface | LLM Vendor     | LLM Model           | MCP Runtime | Text | Voice In | Voice Out |
+|------------|----------------|--------------------|--------------|-------|-----------|------------|
+| LM Studio  | Swiss AI       | Apertus 8B         | local        | ❌ | ❌ | ❌ |
+| LM Studio  | Alibaba Cloud  | Qwen3 8B           | local        | ✅ | ❌ | ❌ |
+| LM Studio  | OpenAI         | OSS GPT 20B        | local        | ✅ | ❌ | ❌ |
+| Le Chat    | Mistral AI     | Mistral Large 123B | GCP          | ✅ | ✅ | ❌ |
+| Claude     | Anthropic      | Claude Sonnet 4.5  | GCP          | ✅ | ❓ | ❓ |
+
+Legend:  
+✅ = verified working  
+❌ = not supported or not tested  
+❓ = unclear / limited support
 
 ---
 
