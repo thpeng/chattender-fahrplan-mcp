@@ -1,5 +1,6 @@
 package ch.thp.cas.chattenderfahrplan.infrastructure;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Slf4j
 public class PathKeyRewriteFilter implements WebFilter {
 
     private static final String API_KEY_HEADER = "X-API-Key";
@@ -35,6 +37,7 @@ public class PathKeyRewriteFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         var path = exchange.getRequest().getPath().pathWithinApplication().value();
         var seg = org.springframework.util.StringUtils.tokenizeToStringArray(path, "/");
+        log.info(path);
         if (seg.length >= 2 && isUuid(seg[0])) {
             var key = seg[0];
             var newPath = "/" + String.join("/", Arrays.copyOfRange(seg, 1, seg.length));
