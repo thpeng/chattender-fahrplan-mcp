@@ -23,6 +23,8 @@ import java.util.List;
  * usually authentication (or at least, a restriction who can use this mcp) is done with the x-api-key. Mistral / le chat
  * however enforces that the mcp has either no authentication (bad), oauth (fine in theory, but complex for a study project)
  * authorization header + basic auth (a hack) or authorization + bearer. so -> x-api-key and auth + bearer are supported.
+ *
+ * note regarding claude. claude supports only oauth with client credentials or .... no auth. no header, nothing.
  */
 @Configuration
 public class SecurityConfig {
