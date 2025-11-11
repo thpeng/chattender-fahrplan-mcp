@@ -1,5 +1,7 @@
 package ch.thp.cas.chattenderfahrplan.journeyservice;
 
+import ch.thp.cas.chattenderfahrplan.mapping.FlatMapper;
+import ch.thp.cas.chattenderfahrplan.mapping.FlatPlan;
 import ch.thp.cas.chattenderfahrplan.mapping.PlanResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ public final class JourneyMapper {
 
     private JourneyMapper() {}
 
+    // 1) Detailliert: genau 1 Verbindung als Itinerary (bestehende Logik)
     public static PlanResult toPlanResultItinerary(JsonNode root) {
         if (root == null) return PlanResult.of(List.of());
         for (JsonNode trip : root.path("trips")) {
@@ -67,7 +70,7 @@ public final class JourneyMapper {
         return PlanResult.of(List.of());
     }
 
-    // 2) Options: MEHRERE Verbindungen als kompakte Übersicht (je Trip genau 1 Option)
+    // 2) Optionen: mehrere Verbindungen kompakt (bestehende Logik)
     public static PlanResult toPlanResultOptions(JsonNode root, int maxOptions) {
         if (root == null) return PlanResult.of(List.of());
         List<PlanResult.TripOption> options = new ArrayList<>();
@@ -76,7 +79,6 @@ public final class JourneyMapper {
             JsonNode legs = trip.path("legs");
             if (!legs.isArray() || legs.size()==0) continue;
 
-            // erstes und letztes PTRideLeg finden
             JsonNode firstRide = null, lastRide = null;
             for (JsonNode leg : legs) {
                 if ("PTRideLeg".equalsIgnoreCase(leg.path("type").asText())) {
@@ -86,7 +88,6 @@ public final class JourneyMapper {
             }
             if (firstRide == null || lastRide == null) continue;
 
-            // aus first/last die Eckdaten
             JsonNode sjFirst = firstRide.path("serviceJourney");
             JsonNode sjLast  = lastRide.path("serviceJourney");
             JsonNode prodFirst = (sjFirst.path("serviceProducts").isArray() && sjFirst.path("serviceProducts").size()>0)
@@ -107,7 +108,6 @@ public final class JourneyMapper {
             String fromName = textOrNull(depPair.depSp.path("place").path("name"));
             String toName   = textOrNull(arrPair.arrSp.path("place").path("name"));
 
-            // Service / Operator / Richtung von ERSTEM Fahr-Leg
             String service = null;
             if (prodFirst != null) {
                 service = textOrNull(prodFirst.path("nameFormatted"));
@@ -141,9 +141,19 @@ public final class JourneyMapper {
         return PlanResult.of(options);
     }
 
+    // 3) Neu: Liste flacher Pläne (für listJourneys/listAndPlanJourneys)
+    public static List<FlatPlan> toFlatPlans(JsonNode root, int maxOptions) {
+        PlanResult pr = toPlanResultOptions(root, Math.max(1, maxOptions));
+        List<FlatPlan> out = new ArrayList<>();
+        for (PlanResult.TripOption opt : pr.options()) {
+            // jeweils ein Einzel-PlanResult aus der Option bauen und dann flatten
+            FlatPlan fp = FlatMapper.toFlat(PlanResult.of(List.of(opt)));
+            out.add(fp);
+        }
+        return out;
+    }
 
-
-    // ---------- Helpers ----------
+    // ---------- Helpers (unverändert) ----------
 
     private static String textOrNull(JsonNode n) {
         if (n == null || n.isMissingNode() || n.isNull()) return null;
@@ -162,12 +172,6 @@ public final class JourneyMapper {
         return null;
     }
 
-    /**
-     * Dep/Arr via routeIndex matchen. Fallbacks:
-     * - wenn nicht gefunden, Arrayindex aus Offset berechnen
-     * - sonst Abfahrt: erstes mit departure, Ankunft: letztes mit arrival
-     * - bei Flags: für Arrival vom Ende her suchen
-     */
     private static StopPair resolveDepArrStopPoints(JsonNode stopPoints, JsonNode product) {
         if (stopPoints == null || !stopPoints.isArray() || stopPoints.size() == 0) {
             return new StopPair(null, null);
@@ -179,7 +183,6 @@ public final class JourneyMapper {
         JsonNode depSp = (idxFrom != null) ? findByRouteIndex(stopPoints, idxFrom) : null;
         JsonNode arrSp = (idxTo   != null) ? findByRouteIndex(stopPoints, idxTo)   : null;
 
-        // Fallback: Offset aus erstem routeIndex ableiten
         if ((depSp == null || arrSp == null) && stopPoints.size() > 0) {
             Integer firstRi = asIntegerOrNull(stopPoints.get(0).path("routeIndex"));
             if (firstRi != null) {
@@ -194,11 +197,9 @@ public final class JourneyMapper {
             }
         }
 
-        // weitere Fallbacks über Use/Flags
         if (depSp == null) depSp = findByUseOrFlag(stopPoints, true);
         if (arrSp == null) arrSp = findByUseOrFlag(stopPoints, false);
 
-        // letzte Fallbackstufe über vorhandene Felder
         if (depSp == null) depSp = findFirstWith(stopPoints, "departure");
         if (arrSp == null) arrSp = findLastWith(stopPoints, "arrival");
 
@@ -207,11 +208,7 @@ public final class JourneyMapper {
 
     private static Integer asIntegerOrNull(JsonNode n) {
         if (n == null || n.isMissingNode() || n.isNull()) return null;
-        try {
-            return n.asInt();
-        } catch (Exception e) {
-            return null;
-        }
+        try { return n.asInt(); } catch (Exception e) { return null; }
     }
 
     private static JsonNode findByRouteIndex(JsonNode stopPoints, int target) {
@@ -225,19 +222,16 @@ public final class JourneyMapper {
     }
 
     private static JsonNode findByUseOrFlag(JsonNode stopPoints, boolean wantDeparture) {
-        // Zuerst stopUse
         if (wantDeparture) {
             for (JsonNode sp : stopPoints) {
                 if ("ACCESS".equalsIgnoreCase(sp.path("stopUse").asText(""))) return sp;
             }
         } else {
-            // Arrival: vom Ende her EGRESS oder forAlighting bevorzugen
             for (int i = stopPoints.size() - 1; i >= 0; i--) {
                 JsonNode sp = stopPoints.get(i);
                 if ("EGRESS".equalsIgnoreCase(sp.path("stopUse").asText(""))) return sp;
             }
         }
-        // Dann Flags
         if (wantDeparture) {
             for (JsonNode sp : stopPoints) {
                 if (sp.path("forBoarding").asBoolean(false)) return sp;
@@ -246,7 +240,6 @@ public final class JourneyMapper {
             for (int i = stopPoints.size() - 1; i >= 0; i--) {
                 JsonNode sp = stopPoints.get(i);
                 if (sp.path("forAlighting").asBoolean(false)) return sp;
-                // falls nicht gesetzt, aber arrival vorhanden ist, ebenfalls ok
                 if (sp.has("arrival")) return sp;
             }
         }
@@ -270,7 +263,6 @@ public final class JourneyMapper {
         return stopPoints.get(stopPoints.size() - 1);
     }
 
-    // bevorzugt Echtzeit
     private static String pickTime(JsonNode when) {
         if (when == null || when.isMissingNode()) return null;
         String rt = textOrNull(when.path("timeRt"));
@@ -278,7 +270,6 @@ public final class JourneyMapper {
         return textOrNull(when.path("timeAimed"));
     }
 
-    // bevorzugt Echtzeit-Gleis; nur sinnvolle Werte
     private static String pickQuay(JsonNode when) {
         if (when == null || when.isMissingNode() || when.isNull()) return null;
         String rt = textOrNull(when.path("quayRt").path("name"));

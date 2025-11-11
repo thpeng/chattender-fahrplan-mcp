@@ -12,15 +12,22 @@ Inspired by the 1996 “Sprechender Fahrplan” by SBB
 
 ## Overview
 
-The repository contains an **MCP server** built with **Spring Boot WebFlux** and **Spring AI**.  
-It provides two MCP tools for journey planning between Swiss railway stations:
+The repository extends the MCP-compatible Spring Boot server with five LLM tools for Swiss railway journey planning.
 
-- **`planJourneyJson`** – returns structured journey data as JSON (departure, arrival, service, operator, quay, direction)
-- **`planJourneyText`** – returns a natural-language sentence describing the next train connection
+These tools allow large language models to query the SBB Journey API directly, selecting the correct function depending on user intent and time context.
 
-The project demonstrates how LLMs can interact with real-time data services using the **Model Context Protocol (MCP)**.  
-It also serves as a **testbed** to explore whether it is feasible to build a Swiss AI product with a Swiss AI stack.
+### Tools
 
+- **nextJourney** – returns a natural-language description of the next available connection between two stations (used for “now”, “next train”, “soon”).
+- **planJourney** – returns the next available connection after a specific ISO datetime (used for “today at 14:35”, “tomorrow 07:10”).
+- **listJourneys** – returns several upcoming connections for today as JSON (used for “show me the options”).
+- **listAndPlanJourneys** – returns several connections starting from a given datetime as JSON (used for “show me trains after 16:00”).
+- **raw** – returns the unprocessed JSON response from the SBB Journey Service (for debugging or analysis).  
+  *Note: this method often overwhelms most language models due to the large JSON payload size.*
+
+An additional helper tool **datum** provides today’s date in ISO format for time resolution.
+
+This extension demon
 ---
 
 ## Components in the Repository

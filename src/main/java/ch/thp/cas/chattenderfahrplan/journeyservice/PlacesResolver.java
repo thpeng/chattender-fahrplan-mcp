@@ -16,7 +16,7 @@ public class PlacesResolver {
         this.client = journeyWebClient;
     }
 
-    public Mono<String> resolveStopPlaceId(String name, String lang) {
+    public String resolveStopPlaceId(String name) {
         return client.get()
                 .uri(uri -> uri.path("/v3/places")
                         .queryParam("nameMatch", name)
@@ -24,11 +24,11 @@ public class PlacesResolver {
                         .queryParam("limit", 1)
                         .build())
                 .accept(MediaType.APPLICATION_JSON)
-                .header("Accept-Language", lang != null ? lang : "de")
+                .header("Accept-Language", "de")
                 .retrieve()
                 .bodyToMono(PlaceResponse.class)
                 .flatMap(resp -> resp.firstStopPlaceId()
-                        .switchIfEmpty(Mono.error(new IllegalArgumentException("No StopPlace for: " + name))));
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("No StopPlace for: " + name)))).block();
     }
 
     // Minimal DTOs für die Extraktion
