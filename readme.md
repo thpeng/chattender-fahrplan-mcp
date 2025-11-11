@@ -57,7 +57,7 @@ Below is an overview of tested integrations:
 
 Legend:  
 ✅ = verified working  
-❌ = not supported or not tested  
+❌ = not supported  
 ❓ = unclear / limited support
 
 
