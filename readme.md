@@ -27,7 +27,8 @@ These tools allow large language models to query the SBB Journey API directly, s
 
 An additional helper tool **datum** provides today’s date in ISO format for time resolution.
 
-This extension demon
+This demonstrates how LLMs can perform real-time timetable queries, combine multiple result formats, and reason over structured SBB journey data within the Model Context Protocol (MCP) framework.
+
 ---
 
 ## Components in the Repository
