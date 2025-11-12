@@ -75,7 +75,7 @@ public class TimetableTool {
                     + "Verwenden bei Anfragen wie 'heute um 14:35', 'morgen 07:10' oder mit Datum. "
                     + "Der Zeitpunkt muss im ISO-8601-Offset-Format vorliegen."
                     + " Wenn dir das datum fehlt, ruf die operation Datum auf. wenn der benutzer dir die zeit nicht gibt, frag ihn nach abfahrtsdatum. " +
-                    "übersetze jeden Text in die Sprache wie der Benutzer mit dir interagiert"
+                    "Übersetze die Antwort des aufrufs in die sprache des Benutzers die er vorher verwendet hat. achte auf die sprache!"
     )
     public PlanResult planJourney(
             @ToolParam(description = "Abfahrtsort, z. B. 'Bern'") String origin,
@@ -91,9 +91,12 @@ public class TimetableTool {
     @Tool(
             name = "listJourneys",
             description = "Listet mehrere Verbindungen ab jetzt fuer heute. "
-                    + "Verwenden wenn mehrere Vorschlaege erwuenscht sind. reagiere bei Optionen, Möglichkeiten mit dieser Methode. "
+                    + "Verwenden wenn mehrere Vorschlaege erwünscht sind. reagiere bei Fragen nach Optionen, " +
+                    "Möglichkeiten mit dieser Methode. "
                     + "Gibt eine Liste von FlatPlan als JSON-kompatibles Objekt zurueck."
                     + "übersetze jeden Text in die Sprache wie der Benutzer mit dir interagiert"
+                    + "Übersetze die Antwort des aufrufs in die sprache des Benutzers die er vorher verwendet hat. achte auf die sprache!"
+
 
     )
     public List<FlatPlan> listJourneys(
@@ -114,8 +117,8 @@ public class TimetableTool {
                     + "Verwenden bei Anfragen wie 'heute um 16 Uhr mehrere Verbindungen'. "
                     + " Das Datum muss du, wenn es nicht bekannt ist beim Tool Datum holen gehen. " +
                     " verwende das wenn du mehrere optionen um eine bestimmte zeit darstellen sollst"
-                    + "Rueckgabe: Liste von FlatPlan als JSON-kompatibles Objekt."
-                    + "übersetze jeden Text in die Sprache wie der Benutzer mit dir interagiert"
+                    + "Rückgabe: Liste von FlatPlan als JSON-kompatibles Objekt."
+                    + "Übersetze die Antwort des aufrufs in die sprache des Benutzers die er vorher verwendet hat. achte auf die sprache!"
 
     )
     public List<FlatPlan> listAndPlanJourneys(
@@ -133,11 +136,9 @@ public class TimetableTool {
 
     @Tool(
             name = "raw",
-            description = "Gibt die unverarbeitete Antwort des Journey-Service als JSON-String zurueck. "
+            description = "Gibt die unverarbeitete Antwort des Journey-Service als JSON-String zurück. "
                     + "Verwenden bei Bedarf an exakten API-Feldern, Trip-IDs oder Debug-Informationen. "
-                    + "Der Zeitpunkt ist optional."
-
-                    + "übersetze jeden Text in die Sprache wie der Benutzer mit dir interagiert"
+                    + "Der Zeitpunkt ist optional. Die antwort kann sehr gross sein. Mach nicht mehr reason-läufe als 2mal  "
 
     )
     public String raw(
