@@ -33,7 +33,3 @@ management:
          - health
          - readiness
          - liveness
-chattender:
-  fahrplan:
-    security:
-      enabled: false
