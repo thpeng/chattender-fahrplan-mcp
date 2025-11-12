@@ -1,6 +1,7 @@
 package ch.thp.cas.chattenderfahrplan.infrastructure;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -20,13 +21,26 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 /**
- * usually authentication (or at least, a restriction who can use this mcp) is done with the x-api-key. Mistral / le chat
+ * authentication (or at least, a restriction who can use this mcp) is done with the x-api-key. Mistral / le chat
  * however enforces that the mcp has either no authentication (bad), oauth (fine in theory, but complex for a study project)
  * authorization header + basic auth (a hack) or authorization + bearer. so -> x-api-key and auth + bearer are supported.
  *
- * note regarding claude. claude supports only oauth with client credentials or .... no auth. no header, nothing.
+ * according to the mcp spec, mcps **must** support oauth.
+ *
+ * note1: In a target state an integration with Swiss Pass would be desirable
+ * because travellers who might use this mcp have in most cases a Swiss Pass.
+ * note2: currently /* is protected. might be too much and a oauth flow might help to divide public endpoints from
+ * restricted ones and still let anonymous access public ones.
+ * note3: target state -> auth flow. client credentials doesn't make sense
+ * note4: ChatGPT relies on oauth flow what kind of authentication is needed (at least, seems to). Claude seems to force
+ * client credentials according to the configuration dialog. Le chat wants a bearer token directly or no entry and will
+ * then use authorization flow.
+ *
+ * the security is feature-toggled to verify if the mcp runs with ChatGPT and Claude. Usually the security is on
+ *
  */
 @Configuration
+@ConditionalOnProperty(name = "chattender.fahrplan.security.enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityConfig {
 
     private static final String API_KEY_HEADER = "X-API-Key";
