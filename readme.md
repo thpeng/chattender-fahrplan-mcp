@@ -47,18 +47,19 @@ This demonstrates how LLMs can perform real-time timetable queries, combine mult
 The MCP server can be connected to various LLM runtimes and frontends.  
 Below is an overview of tested integrations:
 
-| Interface | LLM Vendor     | LLM Model           | MCP Runtime | Text | Voice In | Voice Out |
-|------------|----------------|--------------------|--------------|------|-----------|------------|
-| LM Studio  | Swiss AI       | Apertus 8B         | local        | ❌ | ❌ | ❌ |
-| LM Studio  | Alibaba Cloud  | Qwen3 8B           | local        | ✅ | ❌ | ❌ |
-| LM Studio  | OpenAI         | OSS GPT 20B        | local        | ✅ | ❌ | ❌ |
-| Le Chat    | Mistral AI     | Mistral Large 123B | GCP          | ✅ | ✅ | ❌ |
-| Claude     | Anthropic      | Claude Sonnet 4.5  | GCP          | ❓ | ❓ | ❓ |
+| Interface | LLM Vendor    | LLM Model          | MCP Runtime | Text | Voice In | Voice Out |
+|-----------|---------------|--------------------|--------------|----|---------|----------|
+| LM Studio | Swiss AI      | Apertus 8B         | local        | ❌ | ❌ | ❌ |
+| LM Studio | Alibaba Cloud | Qwen3 8B           | local        | ✅ | ❌ | ❌ |
+| LM Studio | OpenAI        | OSS GPT 20B        | local        | ✅ | ❌ | ❌ |
+| Le Chat   | Mistral AI    | Mistral Large 123B | GCP          | ✅ | ✅ | ❌ |
+| Claude    | Anthropic     | Claude Sonnet 4.5  | GCP          | ✅ | ✅ | ✅ |
+| ChatGPT   | OpenAI        | GPT-5              | GCP          | ✅ | ✅ | ❌ |
 
 Legend:  
 ✅ = verified working  
-❌ = not supported  
-❓ = unclear / limited support
+❌ = not supported  / did not work
+❓ = not tested 
 
 
 ---
@@ -83,9 +84,8 @@ The MCP server runs on:
 
 - **Apertus models** may fail to parse or render complex JSON structures correctly due to missing tool support.
 - **Journey-service integration** currently does not handle all edge cases. Lacks situations, doesn't communicate clearly if a train is delayed. 
-- **ChatGPT** is not supported because the MCP capability is not available in europe
 - **Gemini** is not supported because the MCP capability is only available with the cli / sdk. 
-
+- **Claude** and **ChatGTP** follow strictly the MCP spec and support each only OAuth2 or no authentication. To limit access, the mcp server requires a header with a secret. 
 ---
 
 ## Acknowledgments
