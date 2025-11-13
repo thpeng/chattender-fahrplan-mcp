@@ -1,5 +1,6 @@
 package ch.thp.cas.chattenderfahrplan.infrastructure;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -39,14 +40,31 @@ import java.util.List;
  * the security is feature-toggled to verify if the mcp runs with ChatGPT and Claude. Usually the security is on
  *
  */
+@Slf4j
 @Configuration
-@ConditionalOnProperty(name = "chattender.fahrplan.security.enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityConfig {
 
     private static final String API_KEY_HEADER = "X-API-Key";
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Bean
+    @ConditionalOnProperty(name = "chattender.fahrplan.security.enabled", havingValue = "false")
+    SecurityWebFilterChain mcpSecurityDisabledSecurityFilterChain(ServerHttpSecurity http) {
+        log.warn("MCP security configuration DISABLED");
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .authorizeExchange(reg -> reg
+                        // Everything else is public
+                        .anyExchange().permitAll()
+                )
+                .build();
+    }
+
+
+    @Bean
+    @ConditionalOnProperty(name = "chattender.fahrplan.security.enabled", havingValue = "true", matchIfMissing = true)
     SecurityWebFilterChain springSecurityFilterChain(
             ServerHttpSecurity http,
             @Value("${MCP_API_KEY:}") String expectedApiKey) {
