@@ -48,13 +48,16 @@ The MCP server can be connected to various LLM runtimes and frontends.
 Below is an overview of tested integrations:
 
 | Interface | LLM Vendor    | LLM Model          | MCP Runtime | Text | Voice In | Voice Out |
-|-----------|---------------|--------------------|--------------|----|---------|----------|
-| LM Studio | Swiss AI      | Apertus 8B         | local        | ❌ | ❌ | ❌ |
-| LM Studio | Alibaba Cloud | Qwen3 8B           | local        | ✅ | ❌ | ❌ |
-| LM Studio | OpenAI        | OSS GPT 20B        | local        | ✅ | ❌ | ❌ |
-| Le Chat   | Mistral AI    | Mistral Large 123B | GCP          | ✅ | ✅ | ❌ |
-| Claude    | Anthropic     | Claude Sonnet 4.5  | GCP          | ✅ | ✅ | ✅ |
-| ChatGPT   | OpenAI        | GPT-5              | GCP          | ✅ | ✅ | ❌ |
+|-----------|---------------|--------------------|--------------|------|---------|----------|
+| LM Studio | Google        | Gemma-3 270m       | local        | ❌    | ❌ | ❌ |
+| LM Studio | Google        | Gemma-3 1b         | local        | ❌    | ❌ | ❌ |
+| LM Studio | Google        | Gemma-3 4b         | local        | ✅    | ❌ | ❌ |
+| LM Studio | Swiss AI      | Apertus 8B         | local        | ❌    | ❌ | ❌ |
+| LM Studio | Alibaba Cloud | Qwen3 8B           | local        | ✅    | ❌ | ❌ |
+| LM Studio | OpenAI        | OSS GPT 20B        | local        | ✅    | ❌ | ❌ |
+| Le Chat   | Mistral AI    | Mistral Large 123B | GCP          | ✅    | ✅ | ❌ |
+| Claude    | Anthropic     | Claude Sonnet 4.5  | GCP          | ✅    | ✅ | ✅ |
+| ChatGPT   | OpenAI        | GPT-5              | GCP          | ✅    | ✅ | ❌ |
 
 Legend:  
 ✅ = verified working  
