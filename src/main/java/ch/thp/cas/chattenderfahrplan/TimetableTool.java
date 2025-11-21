@@ -87,6 +87,13 @@ Returns the next connection from now between origin and destination.
 
 Use this for queries like "next departure", "now", or "soon".
 
+CONTRACT FOR ARGUMENTS:
+- The 'origin' and 'destination' arguments MUST be Swiss station names written in Latin letters
+  (e.g. "Bern", "Zuerich HB", "Zuerich Flughafen", "Jungfraujoch").
+- If the user provides station names in another script (e.g. Chinese, Thai, Arabic),
+  FIRST translate or transliterate them to the official station name in Latin letters
+  before calling this tool.
+
 IMPORTANT FOR THE ASSISTANT:
 - Always answer in the same language as the user's last message.
 - The optional parameter 'userLanguage' should be set to the user's language (ISO 639-1, e.g. "de", "fr", "en").
@@ -94,8 +101,8 @@ IMPORTANT FOR THE ASSISTANT:
 """
     )
     public JourneyResult nextJourney(
-            @ToolParam(description = "Departure location, e.g. 'Bern'") String origin,
-            @ToolParam(description = "Arrival location, e.g. 'Zuerich HB'") String destination,
+            @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
+            @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
                     description = """
 Optional user language as ISO 639-1 code (e.g. "de", "fr", "it", "en").
@@ -121,6 +128,10 @@ Returns a journey for a given departure datetime (ISO 8601 with offset).
 
 Use this for queries like "today at 14:35", "tomorrow 07:10", or with an explicit date/time.
 
+CONTRACT FOR ARGUMENTS:
+- The 'origin' and 'destination' MUST be Swiss station names written in Latin letters
+  (e.g. "Bern", "Zuerich HB", "Zuerich Flughafen", "Jungfraujoch").
+  If the user provides other scripts, first translate or transliterate them to Latin station names.
 - The 'datetime' argument MUST be an ISO-8601 datetime with offset, e.g. "2025-11-11T14:35:00+01:00".
 - If the date is missing, you can call the 'datum' tool to obtain today's date.
 - If the user does not provide a time, ask for a departure time.
@@ -132,8 +143,8 @@ IMPORTANT FOR THE ASSISTANT:
 """
     )
     public JourneyResult planJourney(
-            @ToolParam(description = "Departure location, e.g. 'Bern'") String origin,
-            @ToolParam(description = "Arrival location, e.g. 'Zuerich HB'") String destination,
+            @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
+            @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
                     description = """
 Departure datetime in ISO 8601 format with offset, e.g. "2025-11-11T14:35:00+01:00".
@@ -165,6 +176,11 @@ Lists multiple connections from now for today.
 
 Use this when the user asks for several options or alternative connections.
 
+CONTRACT FOR ARGUMENTS:
+- The 'origin' and 'destination' MUST be Swiss station names written in Latin letters
+  (e.g. "Bern", "Zuerich HB", "Zuerich Flughafen", "Jungfraujoch").
+  If the user provides other scripts, first translate or transliterate them to Latin station names.
+
 Returns a JSON-compatible list of FlatPlan objects plus a disclaimer.
 
 IMPORTANT FOR THE ASSISTANT:
@@ -174,8 +190,8 @@ IMPORTANT FOR THE ASSISTANT:
 """
     )
     public JourneyListResult listJourneys(
-            @ToolParam(description = "Departure location, e.g. 'Bern'") String origin,
-            @ToolParam(description = "Arrival location, e.g. 'Zuerich HB'") String destination,
+            @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
+            @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(description = "Number of requested options, default 6") Integer limit,
             @ToolParam(
                     description = """
@@ -203,6 +219,10 @@ Lists multiple connections starting from a given departure datetime.
 
 Use this for queries like "several options around today 16:00".
 
+CONTRACT FOR ARGUMENTS:
+- The 'origin' and 'destination' MUST be Swiss station names written in Latin letters
+  (e.g. "Bern", "Zuerich HB", "Zuerich Flughafen", "Jungfraujoch").
+  If the user provides other scripts, first translate or transliterate them to Latin station names.
 - If the date is unknown, you can call the 'datum' tool to obtain today's date.
 - The 'datetime' argument MUST be an ISO-8601 datetime with offset, e.g. "2025-11-11T14:35:00+01:00".
 
@@ -215,8 +235,8 @@ IMPORTANT FOR THE ASSISTANT:
 """
     )
     public JourneyListResult listAndPlanJourneys(
-            @ToolParam(description = "Departure location, e.g. 'Bern'") String origin,
-            @ToolParam(description = "Arrival location, e.g. 'Zuerich HB'") String destination,
+            @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
+            @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
                     description = """
 Start datetime in ISO 8601 format with offset, e.g. "2025-11-11T14:35:00+01:00".
@@ -250,6 +270,11 @@ Returns the unprocessed JSON response from the journey service as a string.
 
 Use this when you need exact API fields, trip IDs or debug information.
 
+CONTRACT FOR ARGUMENTS:
+- The 'origin' and 'destination' MUST be Swiss station names written in Latin letters
+  (e.g. "Bern", "Zuerich HB", "Zuerich Flughafen", "Jungfraujoch").
+  If the user provides other scripts, first translate or transliterate them to Latin station names.
+
 The datetime is optional. The response can be large; avoid more than 2 reasoning loops on this.
 
 NOTE:
@@ -257,8 +282,8 @@ NOTE:
 """
     )
     public String raw(
-            @ToolParam(description = "Departure location, e.g. 'Bern'") String origin,
-            @ToolParam(description = "Arrival location, e.g. 'Zuerich HB'") String destination,
+            @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
+            @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
                     description = """
 Optional start datetime in ISO 8601 format with offset, e.g. "2025-11-11T14:35:00+01:00".
@@ -296,7 +321,7 @@ If not provided, 'now' in Europe/Zurich will be used.
      * Keys should be ISO 639-1 codes (e.g. "de", "fr", "en"). BCP-47 like "pt-BR" is fine too.
      */
     private Map<String, String> loadDisclaimers() {
-        try (InputStream in = getClass().getResourceAsStream("/disclaimers.properties")) {
+        try (InputStream in = getClass().getResourceAsStream("disclaimers.properties")) {
             if (in == null) {
                 log.warn("disclaimers.properties not found on classpath; falling back to English only.");
                 return Map.of();
