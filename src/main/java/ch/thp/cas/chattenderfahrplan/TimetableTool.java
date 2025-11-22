@@ -10,6 +10,8 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -320,14 +322,17 @@ If not provided, 'now' in Europe/Zurich will be used.
      * Load disclaimers from /disclaimers.properties into a language → text map.
      * Keys should be ISO 639-1 codes (e.g. "de", "fr", "en"). BCP-47 like "pt-BR" is fine too.
      */
+
     private Map<String, String> loadDisclaimers() {
-        try (InputStream in = getClass().getResourceAsStream("disclaimers.properties")) {
+        try (InputStream in = getClass().getResourceAsStream("/disclaimers.properties")) {
             if (in == null) {
                 log.warn("disclaimers.properties not found on classpath; falling back to English only.");
                 return Map.of();
             }
             Properties props = new Properties();
-            props.load(in);
+            try (InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                props.load(reader); // <- jetzt UTF-8 statt ISO-8859-1
+            }
             return props.entrySet().stream()
                     .collect(Collectors.toUnmodifiableMap(
                             e -> ((String) e.getKey()).trim().toLowerCase(Locale.ROOT),
@@ -338,6 +343,7 @@ If not provided, 'now' in Europe/Zurich will be used.
             return Map.of();
         }
     }
+
 
     /**
      * Resolve the disclaimer text for the given userLanguage.
