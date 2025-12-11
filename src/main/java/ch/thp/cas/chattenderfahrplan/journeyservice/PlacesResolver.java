@@ -16,6 +16,9 @@ public class PlacesResolver {
         this.client = journeyWebClient;
     }
 
+    /**
+     * TODO incomplete because it is using only ONE match. with multiple matches it leads to wrong answers.
+     */
     public String resolveStopPlaceId(String name) {
         return client.get()
                 .uri(uri -> uri.path("/v3/places")

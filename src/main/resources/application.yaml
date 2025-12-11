@@ -23,15 +23,14 @@ spring:
         version: 1.0.0
         type: SYNC
         instructions: |
-          You are using the "chattender-fahrplan-mcp" timetable tools.
+          You are using the "chattender-fahrplan-mcp" timetable tools for planning journeys in switzerland
 
           RULES FOR THE ASSISTANT:
           - Use timetable tools (nextJourney, planJourney, listJourneys, listAndPlanJourneys, raw) to obtain current data.
           - For concrete timetable details (service names, times, platforms), rely ONLY on the latest tool result, not on older tool calls in this conversation.
           - Do NOT invent or reuse service names, times or platforms from memory. Always copy them from the most recent tool output.
           - Always answer in the same language as the user's last message.
-          - When a tool returns a localized disclaimer, include it in your answer so the user is reminded to verify the connection on https://www.sbb.ch/.
-          - Make it clear that timetable information may be incomplete or incorrect due to AI-based interpretation and should be verified on https://www.sbb.ch/.
+          - Make it clear and include it in your answer that timetable information may be incomplete or incorrect due to AI-based interpretation and should be verified on https://www.sbb.ch/. 
 
         stdio:
           enabled: false
