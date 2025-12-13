@@ -33,23 +33,19 @@ public class JourneyService {
        ========================= */
 
     /** Textuelle Zusammenfassung: naechste passende Verbindung ab Zeitpunkt when. */
-    public PlanResult planJourneyText(String originUIC, String destinationUIC, OffsetDateTime when) {
-        JsonNode json = fetchTrips(originUIC, destinationUIC, when).block();
-        // Nimmt die beste/erste Verbindung ab Zeitpunkt when und formatiert als Text
-        return JourneyMapper.toPlanResultItinerary(json);
+    public Mono<PlanResult> planJourneyText(String originUIC, String destinationUIC, OffsetDateTime when) {
+        return fetchTrips(originUIC, destinationUIC, when)
+                .map(JourneyMapper::toPlanResultItinerary);
     }
 
     /** JSON-kompatible Liste: mehrere Verbindungen ab Zeitpunkt when (limit steuert Anzahl). */
-    public List<FlatPlan> planJourneyJson(String originUIC, String destinationUIC, OffsetDateTime when, int limit) {
-        JsonNode json = fetchTrips(originUIC, destinationUIC, when).block();
-        // Bevorzugt direkte Flat-Listenabbildung (falls vorhanden)
-        // TODO: Falls deine Mapper keine Liste liefern, ersatzweise Options->Flat umsetzen.
-        List<FlatPlan> flats = JourneyMapper.toFlatPlans(json, Math.max(1, limit));
-        return flats;
+    public Mono<List<FlatPlan>> planJourneyJson(String originUIC, String destinationUIC, OffsetDateTime when, int limit) {
+        return fetchTrips(originUIC, destinationUIC, when)
+                .map(json -> JourneyMapper.toFlatPlans(json, Math.max(1, limit)));
     }
 
     /** Rohantwort des Journey-Service als JSON-String (Debug, Trip-IDs, volle Felder). */
-    public String rawTripSearch(String originUIC, String destinationUIC, OffsetDateTime when, int maxAlternatives) {
+    public Mono<String> rawTripSearch(String originUIC, String destinationUIC, OffsetDateTime when, int maxAlternatives) {
         TripsRequest req = toTripsRequest(originUIC, destinationUIC, when, false);
         // maxAlternatives wird aktuell clientseitig geschnitten (Mapper), Backend-Body bleibt minimal wie bisher.
         return client.post()
@@ -58,8 +54,7 @@ public class JourneyService {
                 .header("Request-ID", UUID.randomUUID().toString())
                 .bodyValue(req)
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                .bodyToMono(String.class);
     }
 
     /* =========================

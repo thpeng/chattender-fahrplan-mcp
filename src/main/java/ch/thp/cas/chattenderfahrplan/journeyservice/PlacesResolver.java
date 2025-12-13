@@ -19,7 +19,7 @@ public class PlacesResolver {
     /**
      * TODO incomplete because it is using only ONE match. with multiple matches it leads to wrong answers.
      */
-    public String resolveStopPlaceId(String name) {
+    public Mono<String> resolveStopPlaceId(String name) {
         return client.get()
                 .uri(uri -> uri.path("/v3/places")
                         .queryParam("nameMatch", name)
@@ -31,7 +31,7 @@ public class PlacesResolver {
                 .retrieve()
                 .bodyToMono(PlaceResponse.class)
                 .flatMap(resp -> resp.firstStopPlaceId()
-                        .switchIfEmpty(Mono.error(new IllegalArgumentException("No StopPlace for: " + name)))).block();
+                        .switchIfEmpty(Mono.error(new IllegalArgumentException("No StopPlace for: " + name))));
     }
 
     // Minimal DTOs für die Extraktion

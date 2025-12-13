@@ -4,11 +4,6 @@ import ch.thp.cas.chattenderfahrplan.journeyservice.JourneyService;
 import ch.thp.cas.chattenderfahrplan.journeyservice.PlacesResolver;
 import ch.thp.cas.chattenderfahrplan.mapping.FlatPlan;
 import ch.thp.cas.chattenderfahrplan.mapping.PlanResult;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Service;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +16,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 /**
  * Toolset for LLM-based timetable queries (bring-your-own-LLM).
@@ -107,7 +108,7 @@ public class TimetableTool {
                     - The tool returns a localized disclaimer; keep it in the answer so the user is reminded to verify on https://www.sbb.ch/.
                     """
     )
-    public JourneyResult nextJourney(
+    public Mono<JourneyResult> nextJourney(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
@@ -118,14 +119,10 @@ public class TimetableTool {
                             """
             ) String userLanguage
     ) {
-        var originId = places.resolveStopPlaceId(origin);
-        var destId = places.resolveStopPlaceId(destination);
-        var when = OffsetDateTime.now(ZURICH);
-
-        var plan = journeys.planJourneyText(originId, destId, when);
         var disclaimer = resolveDisclaimer(userLanguage);
-
-        return new JourneyResult(plan, disclaimer);
+        return Mono.zip(places.resolveStopPlaceId(origin), places.resolveStopPlaceId(destination))
+                .flatMap(ids -> journeys.planJourneyText(ids.getT1(), ids.getT2(), OffsetDateTime.now(ZURICH)))
+                .map(plan -> new JourneyResult(plan, disclaimer));
     }
 
     @Tool(
@@ -149,7 +146,7 @@ public class TimetableTool {
                     - The tool returns a localized disclaimer; keep it in the answer so the user is reminded to verify on https://www.sbb.ch/.
                     """
     )
-    public JourneyResult planJourney(
+    public Mono<JourneyResult> planJourney(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
@@ -166,14 +163,10 @@ public class TimetableTool {
                             """
             ) String userLanguage
     ) {
-        var originId = places.resolveStopPlaceId(origin);
-        var destId = places.resolveStopPlaceId(destination);
-        var when = parseIsoOffset(datetime);
-
-        var plan = journeys.planJourneyText(originId, destId, when);
         var disclaimer = resolveDisclaimer(userLanguage);
-
-        return new JourneyResult(plan, disclaimer);
+        return Mono.zip(places.resolveStopPlaceId(origin), places.resolveStopPlaceId(destination))
+                .flatMap(ids -> journeys.planJourneyText(ids.getT1(), ids.getT2(), parseIsoOffset(datetime)))
+                .map(plan -> new JourneyResult(plan, disclaimer));
     }
 
     @Tool(
@@ -196,7 +189,7 @@ public class TimetableTool {
                     - The tool returns a localized disclaimer; keep it in the answer so the user is reminded to verify on https://www.sbb.ch/.
                     """
     )
-    public JourneyListResult listJourneys(
+    public Mono<JourneyListResult> listJourneys(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(description = "Number of requested options, default 6") Integer limit,
@@ -208,15 +201,12 @@ public class TimetableTool {
                             """
             ) String userLanguage
     ) {
-        var originId = places.resolveStopPlaceId(origin);
-        var destId = places.resolveStopPlaceId(destination);
         int max = limit == null || limit < 1 ? 6 : limit;
-        var when = OffsetDateTime.now(ZURICH);
-
-        var list = journeys.planJourneyJson(originId, destId, when, max);
         var disclaimer = resolveDisclaimer(userLanguage);
 
-        return new JourneyListResult(list, disclaimer);
+        return Mono.zip(places.resolveStopPlaceId(origin), places.resolveStopPlaceId(destination))
+                .flatMap(ids -> journeys.planJourneyJson(ids.getT1(), ids.getT2(), OffsetDateTime.now(ZURICH), max))
+                .map(list -> new JourneyListResult(list, disclaimer));
     }
 
     @Tool(
@@ -241,7 +231,7 @@ public class TimetableTool {
                     - The tool returns a localized disclaimer; keep it in the answer so the user is reminded to verify on https://www.sbb.ch/.
                     """
     )
-    public JourneyListResult listAndPlanJourneys(
+    public Mono<JourneyListResult> listAndPlanJourneys(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
@@ -259,15 +249,12 @@ public class TimetableTool {
                             """
             ) String userLanguage
     ) {
-        var originId = places.resolveStopPlaceId(origin);
-        var destId = places.resolveStopPlaceId(destination);
         int max = limit == null || limit < 1 ? 6 : limit;
-        var when = parseIsoOffset(datetime);
-
-        var list = journeys.planJourneyJson(originId, destId, when, max);
         var disclaimer = resolveDisclaimer(userLanguage);
 
-        return new JourneyListResult(list, disclaimer);
+        return Mono.zip(places.resolveStopPlaceId(origin), places.resolveStopPlaceId(destination))
+                .flatMap(ids -> journeys.planJourneyJson(ids.getT1(), ids.getT2(), parseIsoOffset(datetime), max))
+                .map(list -> new JourneyListResult(list, disclaimer));
     }
 
     @Tool(
@@ -288,7 +275,7 @@ public class TimetableTool {
                     - This tool does NOT append a disclaimer. The assistant is responsible for adding any safety notes.
                     """
     )
-    public String raw(
+    public Mono<String> raw(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
             @ToolParam(
@@ -299,21 +286,21 @@ public class TimetableTool {
             ) String datetime,
             @ToolParam(description = "Number of alternatives, default 6") Integer maxAlternatives
     ) {
-        var originId = places.resolveStopPlaceId(origin);
-        var destId = places.resolveStopPlaceId(destination);
         var when = (datetime == null || datetime.isBlank())
                 ? OffsetDateTime.now(ZURICH)
                 : parseIsoOffset(datetime);
         int max = maxAlternatives == null || maxAlternatives < 1 ? 6 : maxAlternatives;
-        return journeys.rawTripSearch(originId, destId, when, max);
+
+        return Mono.zip(places.resolveStopPlaceId(origin), places.resolveStopPlaceId(destination))
+                .flatMap(ids -> journeys.rawTripSearch(ids.getT1(), ids.getT2(), when, max));
     }
 
     // --- helpers -------------------------------------------------------------
 
     private static OffsetDateTime parseIsoOffset(String datetime) {
         if (datetime == null || datetime.isBlank()) {
-          log.info("datetime is null or empty falling back on now");
-          return OffsetDateTime.now(ZURICH);
+            log.info("datetime is null or empty falling back on now");
+            return OffsetDateTime.now(ZURICH);
         }
         try {
             if (datetime.contains("now")) {
@@ -322,10 +309,10 @@ public class TimetableTool {
                 return OffsetDateTime.now(ZURICH);
             }
             OffsetDateTime parsed = OffsetDateTime.parse(datetime, ISO_OFFSET);
-            if (parsed.isBefore(OffsetDateTime.now())) {
+            if (parsed.isBefore(OffsetDateTime.now(ZURICH))) {
                 //TODO smaller modells may use datetimes from years back which leads to errors with the j-s.
                 //thus the mcp will fall back on now
-                log.info("datetime {} is before {}, falling back on now", datetime, OffsetDateTime.now());
+                log.info("datetime {} is before {}, falling back on now", datetime, OffsetDateTime.now(ZURICH));
                 return OffsetDateTime.now(ZURICH);
             }
             return parsed;
