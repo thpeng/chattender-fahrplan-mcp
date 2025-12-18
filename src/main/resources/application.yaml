@@ -36,7 +36,9 @@ spring:
         resource-change-notification: true
         tool-change-notification: true
         prompt-change-notification: true
-        streamable-http: /mcp
+        sse-endpoint: /mcp
+        streamable-http:
+          mcp-endpoint: /mcp
 
 management:
   endpoints:
