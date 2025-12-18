@@ -19,6 +19,7 @@ spring:
   ai:
     mcp:
       server:
+        protocol: streamable
         name: chattender-fahrplan-mcp
         version: 1.0.0
         type: SYNC
@@ -32,9 +33,10 @@ spring:
           - Always answer in the same language as the user's last message.
           - Make it clear and include it in your answer that timetable information may be incomplete or incorrect due to AI-based interpretation and should be verified on https://www.sbb.ch/. 
 
-        stdio:
-          enabled: false
-        sse-message-endpoint: /mcp/message
+        resource-change-notification: true
+        tool-change-notification: true
+        prompt-change-notification: true
+        streamable-http: /mcp
 
 management:
   endpoints:
