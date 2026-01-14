@@ -270,7 +270,7 @@ public class TimetableTool {
         return new JourneyListResult(list, disclaimer);
     }
 
-    @Tool(
+    /*@Tool(
             name = "raw",
             description = """
                     Returns the unprocessed JSON response from the journey service as a string.
@@ -287,7 +287,7 @@ public class TimetableTool {
                     NOTE:
                     - This tool does NOT append a disclaimer. The assistant is responsible for adding any safety notes.
                     """
-    )
+    )*/
     public String raw(
             @ToolParam(description = "Departure location as Swiss station name in Latin letters, e.g. 'Bern', 'Zuerich Flughafen'") String origin,
             @ToolParam(description = "Arrival location as Swiss station name in Latin letters, e.g. 'Zuerich HB', 'Jungfraujoch'") String destination,
