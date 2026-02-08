@@ -272,10 +272,10 @@ public final class JourneyMapper {
 
     private static String pickQuay(JsonNode when) {
         if (when == null || when.isMissingNode() || when.isNull()) return null;
-        String rt = textOrNull(when.path("quayRt").path("name"));
-        if (isValidQuay(rt)) return rt;
         String fmt = textOrNull(when.path("quayFormatted"));
         if (isValidQuay(fmt)) return fmt;
+        String rt = textOrNull(when.path("quayRt").path("name"));
+        if (isValidQuay(rt)) return rt;
         String aimed = textOrNull(when.path("quayAimed").path("name"));
         if (isValidQuay(aimed)) return aimed;
         return null;
