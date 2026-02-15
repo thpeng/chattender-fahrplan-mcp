@@ -1,8 +1,6 @@
 # 🚆 Der chattende Fahrplan – a Swiss Timetable MCP Server
 
 A **Spring AI / MCP-compatible server** that provides **SBB timetable information** to language models.  
-Tested with **OpenAI OSS GPT (20B)**, **LM Studio (Apertus 8B)**, and **Qwen-3 8B** via LM Studio.  
-Integrated in an online-solution based on **Mistral Large 123b with Le Chat** and a accessible MCP server on GCP.
 Enables *bring-your-own LLM* scenarios to interact with the SBB timetable.  
 This is an **experimental study project** with **no warranties** regarding accuracy, completeness, or runtime behavior.
 
@@ -23,11 +21,9 @@ These tools allow large language models to query the SBB Journey API directly, s
 - **listJourneys** – returns several upcoming connections for today as JSON (used for “show me the options”).
 - **listAndPlanJourneys** – returns several connections starting from a given datetime as JSON (used for “show me trains after 16:00”).
 - **raw** – returns the unprocessed JSON response from the SBB Journey Service (for debugging or analysis).  
-  *Note: this method often overwhelms most language models due to the large JSON payload size.*
+  *Note: this method often overwhelms smaller language models with limited context windows due to the large JSON payload size.*
 
 An additional helper tool **datum** provides today’s date in ISO format for time resolution.
-
-This demonstrates how LLMs can perform real-time timetable queries, combine multiple result formats, and reason over structured SBB journey data within the Model Context Protocol (MCP) framework.
 
 ---
 
@@ -36,9 +32,9 @@ This demonstrates how LLMs can perform real-time timetable queries, combine mult
 - **infrastructure** – infrastructure and security components
 - **journeyservice** – integration with the SBB journey service
 - **mapping** – mapping from journey-service data to LLM-digestible datatypes
-- **TimetableTool** – exposes the LLM tools
-- **Minimal Jinja Template** – used for LM Studio integration (tested with Apertus models)
-- **Example MCP Snippet** – shows how to connect the local server with LM Studio
+- **TimetableTool** – exposes the MCP tools
+- **Minimal Jinja Template** – used for LM Studio integration with Apertus
+- **Example MCP Snippet** – shows how to connect a local MCP-server with LM Studio
 
 ---
 
@@ -62,8 +58,35 @@ Below is an overview of tested integrations:
 Legend:  
 ✅ = verified working  
 ❌ = not supported  / did not work
-❓ = not tested 
+---
 
+## Results
+
+The following use cases and benefits have been tested: 
+- The next connection with an origin and destination 
+- Planned connection 
+- Multiple options
+- Journeys with (multiple) stopover 
+- Itinerary planning
+- Multilanguage support 
+
+Below are some screenshot from the running prototype, integrated with various MCP-hosts and models
+
+![](results/claude_deutsch.png)
+Integrated with Claude web, displaying request and response
+![](results/gemma3-4b.png)
+Integrated with LMStudio and gemma3-4b from Google. This was the smallest model which could be integrated successfully with the MCP-server.  
+<img src="results/lechat.png" height="300">
+
+Very good speech-to-text model (swiss station names matter!). Used on a handheld with the lechat app. 
+
+## Challenges
+
+Challenges to overcome were as following
+- Keeping the token size of the instructions as small as possible for integrating it with smaller models
+- Creating dataformat and structures which let smaller models with limited token size work with the mcp server and still get benefit from the bigger cloud models
+- Keeping the language stable (no switch of language due to the server 'language')
+- Date and time calculation: The tested MCP-Hosts / LLM do not have the same behavior regarding date / time. Sometimes the date is present, the exact time almost never. 
 
 ---
 
@@ -85,11 +108,19 @@ The MCP server runs on:
 
 ## Limitations
 
-- **Apertus models** may fail to parse or render complex JSON structures correctly due to missing tool support.
-- **Journey-service integration** currently does not handle all edge cases. Lacks situations, doesn't communicate clearly if a train is delayed. 
-- **Gemini** is not supported because the MCP capability is only available with the cli / sdk. 
-- **Claude** and **ChatGTP** follow strictly the MCP spec and support each only OAuth2 or no authentication. To limit access, the mcp server requires a header with a secret. 
+- **Apertus models** integration failed mostly due to missing tool support.
+- **Journey-service integration** currently does not handle all edge cases. Lacks situations, picks first station match, doesn't communicate clearly if a train is delayed. 
+- **Gemini** is not supported because the MCP capability is only available with the cli / sdk.
+- **Authentication** no clean OAuth integration done. Only API-keys which are not supported by the MCP spec
+
 ---
+
+## Future Work
+
+The CAS has ended, the server on GCP is now disabled. The next step is to create a similar integration but not with SBB APIs
+but with the open-data APIs from https://opentransportdata.swiss/. 
+The https://github.com/thpeng/unendliche-reise-mcp focuses on better UX (e.g. elicitation) and improved security against
+vulnerabilities as shown with the companion material from https://github.com/thpeng/lokis-mcp. 
 
 ## Acknowledgments
 
@@ -99,7 +130,3 @@ The MCP server runs on:
 - **ChatGPT** – for the vibe coding sessions 
 
 ---
-
-## Contact
-
-For questions, please open an issue via **GitHub Issues**.
