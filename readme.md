@@ -23,7 +23,7 @@ These tools allow large language models to query the SBB Journey API directly, s
 - **raw** – returns the unprocessed JSON response from the SBB Journey Service (for debugging or analysis).  
   *Note: this method often overwhelms smaller language models with limited context windows due to the large JSON payload size.*
 
-An additional helper tool **datum** provides today’s date in ISO format for time resolution.
+An additional helper tool **datum** provides today’s date in ISO format for date resolution.
 
 ---
 
@@ -70,7 +70,7 @@ The following use cases and benefits have been tested:
 - Itinerary planning
 - Multilanguage support 
 
-Below are some screenshot from the running prototype, integrated with various MCP-hosts and models
+Below are some screenshots from the running prototype, integrated with various MCP-hosts and models
 
 ![](results/claude_deutsch.png)
 Integrated with Claude web, displaying request and response
@@ -82,11 +82,12 @@ Very good speech-to-text model (swiss station names matter!). Used on a handheld
 
 ## Challenges
 
-Challenges to overcome were as following
+The following challenges had to be overcome:
 - Keeping the token size of the instructions as small as possible for integrating it with smaller models
 - Creating dataformat and structures which let smaller models with limited token size work with the mcp server and still get benefit from the bigger cloud models
-- Keeping the language stable (no switch of language due to the server 'language')
+- Preventing language switching caused by the server's response language
 - Date and time calculation: The tested MCP-Hosts / LLM do not have the same behavior regarding date / time. Sometimes the date is present, the exact time almost never. 
+- Security / isolation
 
 ---
 
@@ -117,8 +118,8 @@ The MCP server runs on:
 
 ## Future Work
 
-The CAS has ended, the server on GCP is now disabled. The next step is to create a similar integration but not with SBB APIs
-but with the open-data APIs from https://opentransportdata.swiss/. 
+The GCP deployment from the CAS thesis phase has been decommissioned. Development continues with a similar integration. 
+This time not with SBB APIs but with the open-data APIs from https://opentransportdata.swiss/. 
 The https://github.com/thpeng/unendliche-reise-mcp focuses on better UX (e.g. elicitation) and improved security against
 vulnerabilities as shown with the companion material from https://github.com/thpeng/lokis-mcp. 
 
