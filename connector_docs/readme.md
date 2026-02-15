@@ -2,7 +2,7 @@
 
 > **MCP Server URL**
 >
-> The MCP Server URL is currently **withheld** and will be published **shortly before the HWZ demo**.
+> The MCP Server URL is https://chattender-fahrplan-mcp-971368006395.europe-west6.run.app/mcp
 
 > **Caution**
 > 
@@ -33,7 +33,7 @@
 
     * **Name**: `chattender-fahrplan`
     * **Description**: optional
-    * **MCP Server URL**: *withheld*
+    * **MCP Server URL**: https://chattender-fahrplan-mcp-971368006395.europe-west6.run.app/mcp
     * **Authentication**: No Authentication
 * Confirm risk acknowledgement
 
@@ -61,7 +61,7 @@
 * Enter:
 
     * **Name**: `chattender-fahrplan`
-    * **Remote MCP server URL**: *withheld*
+    * **Remote MCP server URL**: https://chattender-fahrplan-mcp-971368006395.europe-west6.run.app/mcp
 * Advanced settings: leave default unless instructed
 
 ### 3. Use in Chat
@@ -90,7 +90,7 @@
 * Fill in:
 
     * **Connector Name**: `chattender-fahrplan`
-    * **Connector Server**: *withheld*
+    * **Connector Server**: https://chattender-fahrplan-mcp-971368006395.europe-west6.run.app/mcp
     * **Authentication Method**: No Authentication
 
 ### 3. Enable Connector in Workspace
