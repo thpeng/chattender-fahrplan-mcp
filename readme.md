@@ -73,13 +73,20 @@ The following use cases and benefits have been tested:
 Below are some screenshots from the running prototype, integrated with various MCP-hosts and models
 
 ![](results/claude_eng.png)
+
 Integrated with Claude web, displaying request and response
+
 ![](results/gemma3-4b.png)
+
 Integrated with LMStudio and gemma3-4b from Google. This was the smallest model which could be integrated successfully with the MCP-server.  
+
 ![](results/chatgpt_ger.png)
+
 Integration with ChatGPT. The developer mode is required because of security reasons.
+
 ![](results/lechat_details.png)
-Very good speech-to-text model (swiss station names matter!). Used on a handheld with the lechat app. 
+
+Very good speech-to-text model (swiss station names matter!). 
 
 ## Challenges
 
